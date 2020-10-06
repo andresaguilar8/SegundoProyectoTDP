@@ -152,22 +152,33 @@ public class Juego {
 		return toReturn;
 	}
 	
+	private boolean estaMasDeUnaVez(int fila, int col, Celda c) {
+		int cantidad = 0;
+		boolean toReturn = false;
+		if (matriz[fila][col] != null)
+			if (matriz[fila][col].getValor() == c.getValor()) {
+				cantidad++;
+				if (cantidad == 2)
+					toReturn = true;
+		}
+		return toReturn;
+	}
 	public boolean estaEnCuadrante(Celda c) {
 		boolean toReturn = false;
 		int fila = c.getFila();
 		int col = c.getCol();
 		int cantidad = 0;
-		
 		if ((fila == 0) || (fila == 3) || (fila == 6)) {
 			if ((col == 0) || (col == 3) || (col == 6)) {
 				for (int i = fila; i <= fila+2 && toReturn == false; i++)
 					for (int j = col; j <= col+2 && toReturn == false; j++)
-						if (matriz[i][j] != null)
-							if (matriz[i][j].getValor() == c.getValor()) {
-								cantidad++;
-								if (cantidad == 2)
-									toReturn = true;
-							}
+						toReturn = estaMasDeUnaVez(i, j, c);
+//						if (matriz[i][j] != null)
+//							if (matriz[i][j].getValor() == c.getValor()) {
+//								cantidad++;
+//								if (cantidad == 2)
+//									toReturn = true;
+//							}
 			}
 			else
 				if ((col == 1) || (col == 4) || (col == 7)) {
