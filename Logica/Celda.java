@@ -19,7 +19,7 @@ public class Celda {
 		}
 		else
 			valor = 1;
-		String ruta = entidadgrafica.getImagen(valor-1);
+		String ruta = entidadgrafica.getImagen(valor);
 		ImageIcon img = new ImageIcon(this.getClass().getResource(ruta));
 		entidadgrafica.setGrafico(img);
 	}

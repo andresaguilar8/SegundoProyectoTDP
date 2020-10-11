@@ -11,14 +11,15 @@ import java.util.Scanner;
 public class Juego {
 
 	private Celda [][] matriz;
-	private int tamanio, contador;
+	private int tamanio, totalNumeros;
 	
 	public Juego() {
 		
 	}
+	
 	public Juego(String archivo) throws IOException {
 		this.tamanio = 9;
-		contador = 0;
+		totalNumeros = 0;
 		matriz = new Celda [tamanio][tamanio];
 		Celda c;
 		File f = new File(archivo);
@@ -27,25 +28,17 @@ public class Juego {
         fila = 0;
         col = 0;
         cantLeidos = 0;
-        int i = 0;
         while (s.hasNextInt()) { //mientras queden enteros por leer
             numeroLeido = s.nextInt(); //se lee un entero del archivo
             cantLeidos++;
             c = new Celda();
             matriz[fila][col] = c;
         	c.setValor(numeroLeido);
-        	System.out.print(numeroLeido+" ");
-        	i++;
-        	if (i == 9)
-        	{
-        		System.out.println();
-        		i = 0;
-        	}
         	c.setFila(fila);
         	c.setCol(col);
-        	contador++;
+        	totalNumeros++;
         	if (cantLeidos < 82)
-        		if (cantLeidos % 9 == 0) {
+        		if (col == tamanio - 1) {
         			fila++;
         			col = 0;
         		}
@@ -54,8 +47,18 @@ public class Juego {
         }
 	}
 	
+	public boolean validarSudoku() {
+		boolean toReturn = true;
+		for (int fila = 0; fila < tamanio && toReturn == true; fila++)
+			for (int col = 0; col < tamanio && toReturn == true; col++)
+				if (!cumpleConLasReglas(this.getCelda(fila, col))) {
+					toReturn = false;
+				}
+		return toReturn;
+	}
+	
 	public int totalNumeros() {
-		return contador;
+		return totalNumeros;
 	}
 	
 	public void eliminarCeldasParaComenzar() {
@@ -75,7 +78,7 @@ public class Juego {
 				rnd4 = rndCol.nextInt(9);
 			}
 				
-			contador -= 4;
+			totalNumeros -= 4;
 			matriz[fila][rnd1] = null;
 			matriz[fila][rnd2] = null;
 			matriz[fila][rnd3] = null;
@@ -83,46 +86,43 @@ public class Juego {
 			
 			fila++;
 		}
-		
-
 	}
 	
 	public void setCelda(int fila, int col, Celda c) {
 		matriz[fila][col] = c;
+		totalNumeros++;
+	}
+	
+	public boolean cumpleConLasReglas(Celda c) {
+		return !(estaEnFila(c) || estaEnColumna(c) || estaEnCuadrante(c));
 	}
 	
 	public void accionar(Celda c) {
 		c.actualizar();
-		contador++;
 	}
 	
 	public boolean estaEnFila(Celda c) {
 		boolean toReturn = false;
 		for (int i = 0; i < this.tamanio && toReturn == false; i++)
-			if (c.getCol() != i)
+			if (c.getCol() != i) {
 				if (this.matriz[c.getFila()][i] != null)
 					if (this.matriz[c.getFila()][i].getValor() == c.getValor())
 						toReturn = true;
+			}
 		return toReturn;
 	}
 	
 	public boolean estaEnColumna(Celda c) {
 		boolean toReturn = false;
 		for (int i = 0; i < this.tamanio && toReturn == false; i++)
-			if (c.getFila() != i)
+			if (c.getFila() != i) {
 				if (this.matriz[i][c.getCol()] != null)
 						if (this.matriz[i][c.getCol()].getValor() == c.getValor())
 							toReturn = true;
+			}
 		return toReturn;
 	}
-	
-	public boolean cumpleConLasReglas(Celda c) {
-		boolean toReturn = true;
-		if (estaEnFila(c) || estaEnColumna(c) || estaEnCuadrante(c))
-			toReturn = false;
-		return toReturn;
-	}
-	
+		
 	public Celda hayOtroIgualUnicoEnFila(Celda c) {
 		int fila = c.getFila();
 		int col = c.getCol();
@@ -146,134 +146,83 @@ public class Juego {
 	
 	public boolean gano() {
 		boolean toReturn = false;
-		if (contador == 81)
-			
-		return toReturn;
+		if (totalNumeros == 81)
+			if (validarSudoku())
+				toReturn = true;
 		return toReturn;
 	}
 	
 	private boolean estaMasDeUnaVez(int fila, int col, Celda c) {
-		int cantidad = 0;
 		boolean toReturn = false;
 		if (matriz[fila][col] != null)
-			if (matriz[fila][col].getValor() == c.getValor()) {
-				cantidad++;
-				if (cantidad == 2)
+			if (fila != c.getFila() || col != c.getCol())
+				if (matriz[fila][col].getValor() == c.getValor()) 
 					toReturn = true;
-		}
 		return toReturn;
 	}
+	
+	/*Recorre un cuadrante desde la primer celda en base al numero de fila y columna de la celda del parametro retornando falso en caso de celdas con mismo valor repetidas
+	 * 
+	 */
 	public boolean estaEnCuadrante(Celda c) {
 		boolean toReturn = false;
 		int fila = c.getFila();
 		int col = c.getCol();
-		int cantidad = 0;
-		if ((fila == 0) || (fila == 3) || (fila == 6)) {
-			if ((col == 0) || (col == 3) || (col == 6)) {
-				for (int i = fila; i <= fila+2 && toReturn == false; i++)
-					for (int j = col; j <= col+2 && toReturn == false; j++)
+		
+		if ((fila == 0) | (fila == 3) | (fila == 6)) {
+			if ((col == 0) | (col == 3) | (col == 6)) {
+				for (int i = fila; i <= (fila+2) && toReturn == false; i++) 
+					for (int j = col; j <= (col+2) && toReturn == false; j++) 
 						toReturn = estaMasDeUnaVez(i, j, c);
-//						if (matriz[i][j] != null)
-//							if (matriz[i][j].getValor() == c.getValor()) {
-//								cantidad++;
-//								if (cantidad == 2)
-//									toReturn = true;
-//							}
 			}
-			else
-				if ((col == 1) || (col == 4) || (col == 7)) {
-					for (int i = fila; i <= fila+2 && toReturn == false; i++)
-						for (int j = col-1; j <= col+1 && toReturn == false; j++)
-							if (matriz[i][j] != null)
-								if (matriz[i][j].getValor() == c.getValor()) {
-									cantidad++;
-									if (cantidad == 2)
-										toReturn = true;
-								}
+			if ((col == 1) || (col == 4) || (col == 7)) {
+				for (int i = fila; i <= (fila+2) && toReturn == false; i++) 
+					for (int j = col-1; j <= (col+1) && toReturn == false; j++) 
+						toReturn = estaMasDeUnaVez(i, j, c);		
+			}
+			if ((col == 2) || (col == 5) || (col == 8)) {
+				for (int i = fila; i <= fila+2 && toReturn == false; i++) 
+					for (int j = col-2; j <= col && toReturn == false; j++) 
+						toReturn = estaMasDeUnaVez(i, j, c);			
 				}
-				else
-					if ((col == 2) || (col == 5) || (col == 8)) {
-						for (int i = fila; i <= fila+2 && toReturn == false; i++)
-							for (int j = col-2; j <= col && toReturn == false; j++)
-								if (matriz[i][j] != null)
-									if (matriz[i][j].getValor() == c.getValor()) {
-										cantidad++;
-										if (cantidad == 2)
-											toReturn = true;
-									}
-					}
 		}
 		else
 			if ((fila == 1) || (fila == 4) || (fila == 7)) {
 				if ((col == 0) || (col == 3) || (col == 6)) {
 					for (int i = fila-1; i <= fila+1 && toReturn == false; i++)
 						for (int j = col; j <= col+2 && toReturn == false; j++)
-							if (matriz[i][j] != null)
-								if (matriz[i][j].getValor() == c.getValor()) {
-									cantidad++;
-									if (cantidad == 2)
-										toReturn = true;
-								}
+							toReturn = estaMasDeUnaVez(i, j, c);			
+				}				
+				if ((col == 1) || (col == 4) || (col == 7)) {
+					for (int i = fila-1; i <= fila+1 && toReturn == false; i++) 
+						for (int j = col-1; j <= col+1 && toReturn == false; j++) 
+							toReturn = estaMasDeUnaVez(i, j, c);
 				}
-				else
-					if ((col == 1) || (col == 4) || (col == 7)) {
-						for (int i = fila-1; i <= fila+1 && toReturn == false; i++)
-							for (int j = col-1; j <= col+1 && toReturn == false; j++)
-								if (matriz[i][j] != null)
-									if (matriz[i][j].getValor() == c.getValor()) {
-										cantidad++;
-										if (cantidad == 2)
-											toReturn = true;
-									}
-					}
-					else
-						if ((col == 2) || (col == 5) || (col == 8)) {
-							for (int i = fila-1; i <= fila+1 && toReturn == false; i++)
-								for (int j = col-2; j <= col && toReturn == false; j++)
-									if (matriz[i][j] != null)
-										if (matriz[i][j].getValor() == c.getValor()) {
-											cantidad++;
-											if (cantidad == 2)
-												toReturn = true;
-										}
-						}
+				if ((col == 2) || (col == 5) || (col == 8)) {
+					for (int i = fila-1; i <= fila+1 && toReturn == false; i++)
+						for (int j = col-2; j <= col && toReturn == false; j++)
+							toReturn = estaMasDeUnaVez(i, j, c);
+				}			
 			}
 			else
 				if ((fila == 2) || (fila == 5) || (fila == 8)) {
 					if ((col == 0) || (col == 3) || (col == 6)) {
-						for (int i = fila-2; i <= fila && toReturn == false; i++)
-							for (int j = col; j <= col+2 && toReturn == false; j++)
-								if (matriz[i][j] != null)
-									if (matriz[i][j].getValor() == c.getValor()) {
-										cantidad++;
-										if (cantidad == 2)
-											toReturn = true;
-									}
+						for (int i = fila-2; i <= fila && toReturn == false; i++) 
+							for (int j = col; j <= col+2 && toReturn == false; j++) 
+								toReturn = estaMasDeUnaVez(i, j, c);		
 					}
-					else
-						if ((col == 1) || (col == 4) || (col == 7)) {
-							for (int i = fila-2; i <= fila && toReturn == false; i++)
-								for (int j = col-1; j <= col+1 && toReturn == false; j++)
-									if (matriz[i][j] != null)
-										if (matriz[i][j].getValor() == c.getValor()) {
-											cantidad++;
-											if (cantidad == 2)
-												toReturn = true;
-										}
-						}
-						else
-							if ((col == 2) || (col == 5) || (col == 8)) {
-								for (int i = fila-2; i <= fila && toReturn == false; i++)
-									for (int j = col-2; j <= col && toReturn == false; j++)
-										if (matriz[i][j] != null)
-											if (matriz[i][j].getValor() == c.getValor()) {
-												cantidad++;
-												if (cantidad == 2)
-													toReturn = true;
-											}
-							}
+					if ((col == 1) || (col == 4) || (col == 7)) {
+						for (int i = fila-2; i <= fila && toReturn == false; i++) 
+							for (int j = col-1; j <= col+1 && toReturn == false; j++) 
+								toReturn = estaMasDeUnaVez(i, j, c);
+					}				
+					if ((col == 2) || (col == 5) || (col == 8)) {
+						for (int i = fila-2; i <= fila && toReturn == false; i++) 
+							for (int j = col-2; j <= col && toReturn == false; j++) 
+								toReturn = estaMasDeUnaVez(i, j, c);
+					}
 				}
-		return toReturn;
+			return toReturn;	
 	}
 	
 	public Celda [][] getMatriz() {
@@ -293,6 +242,6 @@ public class Juego {
 	}
 	
 	public int totalNumerosEnMatriz() {
-		return contador;
+		return totalNumeros;
 	}
 }
