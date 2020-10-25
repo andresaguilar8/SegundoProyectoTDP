@@ -1,7 +1,5 @@
 package Sudoku;
 
-
-
 import java.awt.Color;
 import java.awt.EventQueue;
 import java.awt.FlowLayout;
@@ -9,9 +7,6 @@ import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
 import javax.swing.BorderFactory;
@@ -27,6 +22,7 @@ import Logica.EntidadGrafica;
 import Logica.Juego;
 import Logica.NumerosReloj;
 
+@SuppressWarnings("serial")
 public class SudokuGUI extends JFrame {
 
 	private JPanel contentPane, panelIzquierdo, panelDerecho, panelTiempo;
@@ -52,25 +48,22 @@ public class SudokuGUI extends JFrame {
 	}
 
 	public SudokuGUI() {
-		String archivo = "C:\\Users\\Andres\\Desktop\\src\\generadorSudoku.txt";
-		try {
-			juego = new Juego(archivo);
-		} catch (IOException e) {
-			e.printStackTrace();
+		juego = new Juego();
+		if (juego.formatoValido() && juego.validarSudoku()) {
+//			if (juego.validarSudoku()) { 
+				juego.eliminarCeldasParaComenzar();
+				inicializar();
+				iniciarTiempo();
+//			}
 		}
-		
-		if (juego.validarSudoku()) {
-			System.out.println("ES UN SUDOKU VÁLIDO");
-			inicializar();
-			iniciarTiempo();
-		}
-		else {
-			System.out.println("SUDOKU INVÁLIDO");
-			terminar();
-		}
+		else
+			terminar(0);
 	}
 	
-	public void iniciarTiempo() {		
+	/**
+	 * inicializa el reloj que lleva el tiempo transcurrido de juego.
+	 */
+	private void iniciarTiempo() {		
 		izqMinutos = new EntidadGrafica();
 		izqSegundos = new EntidadGrafica();
 		derMinutos = new EntidadGrafica();
@@ -85,6 +78,7 @@ public class SudokuGUI extends JFrame {
 		minutos.getDer().actualizar(0);	
 		segundos.getIzq().actualizar(0);
 		segundos.getDer().actualizar(0);
+		
 		
 		reloj[0] = new JLabel(minutos.getIzq().getGrafico());
 		reloj[1] = new JLabel(minutos.getDer().getGrafico());
@@ -119,65 +113,67 @@ public class SudokuGUI extends JFrame {
 					}
 					
 					if (minutos.getDer().getValor() == 9) {
-						minutos.getDer().setValor(0);
-						minutos.getDer().actualizar(minutos.getDer().getValor());
-						minutos.getIzq().setValor(minutos.getIzq().getValor() + 1);
-						minutos.getIzq().actualizar(minutos.getIzq().getValor());
+						if (minutos.getIzq().getValor() != 9) {
+							minutos.getDer().setValor(0);
+							minutos.getDer().actualizar(minutos.getDer().getValor());
+							minutos.getIzq().setValor(minutos.getIzq().getValor() + 1);
+							minutos.getIzq().actualizar(minutos.getIzq().getValor());
+						}
 					}
 					
-					if (minutos.getIzq().getValor() == 9) {
-						minutos.getDer().setValor(0);
-						minutos.getIzq().setValor(0);
-						minutos.getDer().actualizar(minutos.getDer().getValor());
-						minutos.getIzq().actualizar(minutos.getIzq().getValor());
+					if (minutos.getIzq().getValor() == 9 && minutos.getDer().getValor() == 9) {
+							terminar(1);
+						
 					}
 					repaint();
-				}
-				
+				}		
 		};
-				
 		timer.schedule(tarea, 0 , 1000);
 	}	
 	
 	public void inicializar() {	
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(200, 20, 889, 730);
+		setBounds(200, 3, 889, 730);
 		contentPane = new JPanel();
-//		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
-		setContentPane(contentPane);
-		
+		setContentPane(contentPane);	
 		panelIzquierdo = new JPanel();
 		panelIzquierdo.setBounds(5, 5, 500, 680);
      	panelIzquierdo.setLayout(new GridLayout(3,1));
      	panelIzquierdo.setVisible(true);
 		panelDerecho = new JPanel();
-		panelDerecho.setBounds(560, 140, 450, 429);
-		panelDerecho.setLayout(new GridLayout(2,1));
-		panelDerecho.setSize(240, 440);
+		panelDerecho.setBounds(513, 10, 0, 0);
+		panelDerecho.setLayout(new FlowLayout());
+		panelDerecho.setSize(350, 120);
+		Border bGreyLine = BorderFactory.createLineBorder(Color.BLACK, 2, false);
+		panelDerecho.setBorder(bGreyLine);
 		panelTiempo = new JPanel();
 		panelTiempo.setLayout(new FlowLayout());
-		JLabel etiquetaTiempo = new JLabel("Tiempo transcurrido:");
+		JLabel etiquetaTiempo = new JLabel("Tiempo de juego");
 		etiquetaTiempo.setBounds(110, 110, 110, 110);
 		etiquetaTiempo.setFont(new Font("Font.PLAIN", 5, 26));
 		panelDerecho.add(etiquetaTiempo);
 		panelDerecho.add(panelTiempo);
 		inicializarPaneles(panelIzquierdo);
-		
 		contentPane.setLayout(null);
 		contentPane.add(panelIzquierdo);
 		contentPane.add(panelDerecho);
-		
-		juego.eliminarCeldasParaComenzar();
-		crearBotones();
-		
+		crearBotones();		
 	}
 	
-	public void terminar() {
-		JOptionPane.showMessageDialog(null, "El archivo ingresado no contiene un sudoku válido.","ERROR",2);
+	/**
+	 * termina la ejecución del programa de acuerdo al numero pasado por parametro. Si el numero es 0 es porque el archivo es inválido, si el numero es 1 el juego se cerró porque el usuario se excedió de tiempo.
+	 * @param num, numero que representa el motivo por el cual el programa finalizó.
+	 */
+	private void terminar(int num) {
+		if (num == 0)
+			JOptionPane.showMessageDialog(null, "El archivo ingresado no contiene un sudoku válido.","ERROR",2);
+		else
+			if (num == 1)
+				JOptionPane.showMessageDialog(null, "Ha excedido el tiempo neto de juego ","¡HAS PERDIDO!",2);
 		System.exit(0);
 	}
 	
-	public void inicializarPaneles(JPanel panel) {
+	private void inicializarPaneles(JPanel panel) {
 		Border bGreyLine = BorderFactory.createLineBorder(Color.BLACK, 2, false);
 		paneles = new JPanel[9];
 		for (int i = 0; i < paneles.length; i++) {
@@ -188,7 +184,13 @@ public class SudokuGUI extends JFrame {
 		}
 	}
 	
-	public void crearBotones(int fila, int col, JPanel panel) {
+	/**
+	 * crea los botones del "tablero" comenzando del primer "casillero" de cada cuadrante en base al numero de fila y columna pasado por parametro.
+	 * @param fila, numero de fila del primer "casillero" del cuadrante
+	 * @param col, numero de columna del primer "casillero" del cuadrante
+	 * @param panel, panel en el cual van a ser insertados los botones.
+	 */
+	private void crearBotones(int fila, int col, JPanel panel) {
 		int auxFila = (fila+2);
 		int auxColMax = (col+2);
 		int auxColMin = col;
@@ -205,7 +207,7 @@ public class SudokuGUI extends JFrame {
 		}
 	}
 			
-	void crearBotones() {
+	private void crearBotones() {
 		botonesJuego = new botonConUbicacion[juego.getCantidadFilas()][juego.getCantidadColumnas()];
 		
 			crearBotones(0,0,paneles[0]);
@@ -262,13 +264,11 @@ public class SudokuGUI extends JFrame {
 		actualizarBotones();
 		
 		if (juego.gano()) {
-			panelIzquierdo.removeAll();
-			panelDerecho.removeAll();
 			timer.cancel();
-			JOptionPane.showMessageDialog(null, "Tiempo neto de juego: "+minutos.getIzq().getValor()+""+minutos.getDer().getValor()+":"+segundos.getIzq().getValor()+""+segundos.getDer().getValor(),"FELICITACIONES, USTED HA GANADO",1);
+			JOptionPane.showMessageDialog(null, "Tiempo de juego: "+minutos.getIzq().getValor()+""+minutos.getDer().getValor()+":"+segundos.getIzq().getValor()+""+segundos.getDer().getValor(),"¡FELICITACIONES, HA GANADO!",1);
 			System.exit(0);
 		}
-		else	
+		else 
 			actualizarBotones();
 	}
 	

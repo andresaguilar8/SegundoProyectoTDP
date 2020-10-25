@@ -1,9 +1,8 @@
 package Sudoku;
 
-import java.awt.event.ActionListener;
-
 import javax.swing.JButton;
 
+@SuppressWarnings("serial")
 public class botonConUbicacion extends JButton {
 
 	private int fila, col;

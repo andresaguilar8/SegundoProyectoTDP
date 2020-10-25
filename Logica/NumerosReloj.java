@@ -1,6 +1,6 @@
 package Logica;
 
-public class NumerosReloj   {
+public class NumerosReloj {
 
 	private EntidadGrafica izquierda, derecha;
 	

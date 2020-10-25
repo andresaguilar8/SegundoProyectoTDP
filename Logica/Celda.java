@@ -52,4 +52,5 @@ public class Celda {
 	public int getValor() {
 		return valor;
 	}
+	
 }
